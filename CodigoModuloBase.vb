@@ -5,14 +5,14 @@ Dim aResultadosValidos() As Variant
 Sub main()
     Dim tempoIni        As Date
     Dim texto           As String
+    Dim iChar           As Integer
     Dim sCel            As String
     Dim palavras()      As String
     Dim resultados()    As String
     Dim textoTemp       As String
-    Dim i, iIniPalavras As Long
-    Dim iIniTemp        As Long
-    Dim j               As Integer
-    Dim iRV, iPV        As Long
+    Dim i, iIniPalavras As Double
+    Dim iIniTemp        As Double
+    Dim iRV, iPV        As Double
     
     tempoIni = Now
     
@@ -20,7 +20,21 @@ Sub main()
     'texto = "vermelho"
     
     'verificacoes
-    
+    'qtd caracteres 16
+    If Len(texto) > 16 Then
+        Call MsgBox("Muitos caracteres!" & Chr(13) & "Utilize no máximo 16 letras.", vbOKOnly + vbCritical, "ERRO!")
+        Worksheets("Resultados").Range("C2").Select
+        Exit Sub
+    End If
+    'somente caracteres de a-z ou A-Z
+    For i = 1 To Len(texto)
+        iChar = Asc(Mid(texto, i, 1))
+        If iChar < 65 Or iChar > 127 Or (iChar > 90 And iChar < 97) Then
+            Call MsgBox("Utilize somente letras de 'a'-'z' ou 'A'-'Z'.", vbOKOnly + vbCritical, "ERRO!")
+            Worksheets("Resultados").Range("C2").Select
+            Exit Sub
+        End If
+    Next
     
     'trata texto
     texto = Replace(texto, " ", "")
@@ -55,6 +69,12 @@ inicio:
     resultado = GetPalavra(palavras, textoTemp, iIniPalavras, iPV)
     If resultado <> "" Then
         aPalavrasValidas(iPV) = resultado
+    Else
+        If UBound(aResultadosValidos) < 1 Then
+            Call MsgBox("Não foi encontrado nenhum anagrama com estas letras.", vbOKOnly + vbInformation, "Resultado")
+            Worksheets("Resultados").Range("C2").Select
+            Exit Sub
+        End If
     End If
     
     iRV = iRV + 1
@@ -86,20 +106,16 @@ proximo:
     
     Call printaResultados
     
-    'permutacoes
-    'Call GetPermutation("", texto, 0)
-    
-    'For i = 0 To UBound(aPermutacoes)
-        'Debug.Print aPermutacoes(i)
-    'Next
-    
     ' tempo decorrido em segundos
+    'Call MsgBox("Fim da execução!!!" & Chr(13) & "Tempo decorrido:" & Int(CSng((Now - tempoIni) * 24 * 3600)) & " Segundos", vbOKOnly + vbInformation, "FIM")
+    Worksheets("Resultados").Range("C2").Select
     Debug.Print Int(CSng((Now - tempoIni) * 24 * 3600)) & " Segundos"
 End Sub
 
 Sub printaResultados()
-    Dim txt As String
-    Dim i   As Integer
+    Dim txt     As String
+    Dim i, j    As Integer
+    
     For i = 1 To UBound(aResultadosValidos)
         For j = 0 To UBound(aResultadosValidos(i))
             txt = txt & aResultadosValidos(i)(j) & " "
@@ -111,7 +127,7 @@ Sub printaResultados()
     'Debug.Print txt
 End Sub
 
-Function GetPalavra(palavras As Variant, texto As String, iIniPalavras As Long, iPV As Long) As String
+Function GetPalavra(palavras As Variant, texto As String, iIniPalavras As Double, iPV As Double) As String
     Dim textoTemp   As String
     Dim letra       As String
     Dim posLetra    As String
@@ -165,29 +181,3 @@ Function GetPalavra(palavras As Variant, texto As String, iIniPalavras As Long, 
     iIniPalavras = i
     'Debug.Print "Fim LOOP - " & texto
 End Function
-
-Sub GetPermutation(sElemento1 As String, sElemento2 As String, lArray As Long)
-    Dim iQtdCaract  As Integer
-    Dim sIsola      As String
-    Dim sDemaisInf  As String
-    Dim sDemaisSup  As String
-    Dim sDemais     As String
-    Dim i           As Integer
-    
-    ReDim Preserve aPermutacoes(lArray)
-    
-    iQtdCaract = Len(sElemento2)
-    
-    If iQtdCaract < 2 Then                                 ' verif se ultimo item unico
-        aPermutacoes(lArray) = sElemento1 & sElemento2     ' - adiciona item
-        lArray = lArray + 1
-    Else
-        For i = 1 To iQtdCaract                            ' loop entre demais elementos
-            sIsola = sElemento1 + Mid(sElemento2, i, 1)    ' - isola parte dos elementos
-            sDemaisInf = Left(sElemento2, i - 1)           ' - abaixo elemento isolado
-            sDemaisSup = Right(sElemento2, iQtdCaract - i) ' - acima elemento isolado
-            sDemais = sDemaisInf + sDemaisSup              ' - monta demais elementos
-            Call GetPermutation(sIsola, sDemais, lArray)   ' - permuta demais itens
-        Next
-    End If
-End Sub
